@@ -10,7 +10,7 @@ function initPlugin(fastify, options, next) {
 	fastify.decorate('mongooseAPI', api);
 
 	next();
-};
+}
 
 const plugin = fp(initPlugin, {
 	fastify: '^2.0.0 || ^3.0.0',
