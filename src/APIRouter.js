@@ -1,4 +1,5 @@
 const debug = require('debug')('fastify-mongoose-api');
+const OpenAPISChema = require('fastify-mongoose-api/src/OpenAPISChema');
 
 class APIRouter {
 	constructor(params = {}) {
@@ -15,6 +16,8 @@ class APIRouter {
 
 		this._path = this._prefix + this._collectionName;
 
+		this.openApiSchema = new OpenAPISChema(this._model);
+
 		this._apiSubRoutesFunctions = {};
 		this.setUpRoutes();
 	}
@@ -29,19 +32,20 @@ class APIRouter {
 
 	setUpRoutes() {
 		let path = this._path;
-		this._fastify.get(path, {}, this.routeHandler('routeList'));
-		this._fastify.post(path, {}, this.routeHandler('routePost'));
-		this._fastify.get(path+'/:id', {}, this.routeHandler('routeGet'));
-		this._fastify.put(path+'/:id', {}, this.routeHandler('routePut'));
-		this._fastify.patch(path+'/:id', {}, this.routeHandler('routePut'));
-		this._fastify.delete(path+'/:id', {}, this.routeHandler('routeDelete'));
+
+		this._fastify.get(path, this.openApiSchema.generateSchema("get"), this.routeHandler('routeList'));
+		this._fastify.post(path, this.openApiSchema.generateSchema("post"), this.routeHandler('routePost'));
+		this._fastify.get(path + '/:id', this.openApiSchema.generateSchema("get-one"), this.routeHandler('routeGet'));
+		this._fastify.put(path + '/:id', this.openApiSchema.generateSchema("put"), this.routeHandler('routePut'));
+		this._fastify.patch(path + '/:id', this.openApiSchema.generateSchema("put"), this.routeHandler('routePut'));
+		this._fastify.delete(path + '/:id', this.openApiSchema.generateSchema("delete"), this.routeHandler('routeDelete'));
 
 		/// check if there's apiSubRoutes method on the model
 		if (this._model['apiSubRoutes']) {
 			this._apiSubRoutesFunctions = this._model['apiSubRoutes']();
 
 			for (let key of Object.keys(this._apiSubRoutesFunctions)) {
-				this._fastify.get(path+'/:id/'+key, {}, this.routeHandler('routeSub', key));
+				this._fastify.get(path + '/:id/' + key, {}, this.routeHandler('routeSub', key));
 			}
 		}
 
@@ -50,15 +54,15 @@ class APIRouter {
 
 	routeHandler(funcName, subRouteName = null) {
 		return async (request, reply) => {
-				if (typeof(this._checkAuth) === 'function') {
-					await this._checkAuth(request, reply);
-				}
-				if (subRouteName) {
-					return await this.routeSub(subRouteName, request, reply);
-				} else {
-					return await this[funcName](request, reply);
-				}
+			if (typeof (this._checkAuth) === 'function') {
+				await this._checkAuth(request, reply);
 			}
+			if (subRouteName) {
+				return await this.routeSub(subRouteName, request, reply);
+			} else {
+				return await this[funcName](request, reply);
+			}
+		}
 	}
 
 	async routeSub(routeName, request, reply) {
@@ -66,7 +70,7 @@ class APIRouter {
 		let doc = null;
 		try {
 			doc = await this._model.findById(id).exec();
-		} catch(e) {
+		} catch (e) {
 			doc = null;
 		}
 
@@ -110,11 +114,11 @@ class APIRouter {
 		let ret = {};
 
 		if (search) {
-			query = query.and({$text: {$search: search}});
+			query = query.and({ $text: { $search: search } });
 		}
 
 		if (filter) {
-			let splet = (''+filter).split('=');
+			let splet = ('' + filter).split('=');
 			if (splet.length < 2) {
 				splet[1] = true; /// default value
 			}
@@ -123,10 +127,10 @@ class APIRouter {
 		}
 
 		if (match) {
-			let splet = (''+match).split('=');
+			let splet = ('' + match).split('=');
 			if (splet.length == 2) {
 				const matchOptions = {};
-				matchOptions[splet[0]] = {$regex: splet[1]};
+				matchOptions[splet[0]] = { $regex: splet[1] };
 				query = query.and(matchOptions);
 			}
 		}
@@ -194,7 +198,7 @@ class APIRouter {
 		let doc = null;
 		try {
 			doc = await this._model.findById(id).exec();
-		} catch(e) {
+		} catch (e) {
 			doc = null;
 		}
 
@@ -213,7 +217,7 @@ class APIRouter {
 		let doc = null;
 		try {
 			doc = await this._model.findById(id).exec();
-		} catch(e) {
+		} catch (e) {
 			doc = null;
 		}
 
@@ -232,7 +236,7 @@ class APIRouter {
 		let doc = null;
 		try {
 			doc = await this._model.findById(id).exec();
-		} catch(e) {
+		} catch (e) {
 			doc = null;
 		}
 
@@ -240,12 +244,12 @@ class APIRouter {
 			reply.callNotFound();
 		} else {
 			await doc.apiDelete();
-			reply.send({success: true});
+			reply.send({ success: true });
 		}
 	}
 
 	async docToAPIResponse(doc) {
-		return doc ? ( doc.apiValues ? doc.apiValues() : doc ) : null;
+		return doc ? (doc.apiValues ? doc.apiValues() : doc) : null;
 	}
 }
 
