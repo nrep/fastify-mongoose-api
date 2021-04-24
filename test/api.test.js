@@ -412,14 +412,14 @@ test('PATCH item test', async t => {
 	t.match(response.body, {author: ''+bookFromDb.author.id}, "Author still refs to original");
 });
 
-test('PATCH single item 404', async t => {
+test('PATCH single item 400', async t => {
 	let response = null;
 	response = await supertest(fastify.server)
 		.patch('/api/books/SOMEWRONGID')
-		.expect(404)
+		.expect(400)
 		.expect('Content-Type', 'application/json; charset=utf-8');
 
-	t.equal(response.status, 404);
+	t.equal(response.status, 400);
 });
 
 test('PUT item test', async t => {
@@ -437,14 +437,14 @@ test('PUT item test', async t => {
 	t.match(response.body, {author: ''+bookFromDb.author.id}, "Author still refs to original");
 });
 
-test('PUT single item 404', async t => {
+test('PUT single item 400', async t => {
 	let response = null;
 	response = await supertest(fastify.server)
 		.put('/api/books/SOMEWRONGID')
-		.expect(404)
+		.expect(400)
 		.expect('Content-Type', 'application/json; charset=utf-8');
 
-	t.equal(response.status, 404);
+	t.equal(response.status, 400);
 });
 
 test('DELETE item test', async t => {
