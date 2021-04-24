@@ -17,7 +17,7 @@
     "api",
     "crud"
   ],
-  "author": "nrep",
+  "author": "Elvis Peace NDAHAYO RUGERO",
   "license": "MIT",
   "dependencies": {
     "debug": "^4.2.0",
