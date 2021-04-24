@@ -1,5 +1,5 @@
 const debug = require('debug')('fastify-mongoose-api');
-const OpenAPISChema = require('fastify-mongoose-api/src/OpenAPISChema');
+const OpenAPISChema = require('./OpenAPISChema');
 
 class APIRouter {
 	constructor(params = {}) {
